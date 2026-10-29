@@ -1,0 +1,202 @@
+{
+  "parts": [
+    {
+      "name": "pengutunnel.gz.part-000",
+      "size": 600000,
+      "sha256": "26dfad8f001e4093096f0fadcb6c8b0e4b0090f48c17acb8b6d38ddc9d895632",
+      "git_sha": "cbd2f561441fddf238dd9fc95eb5e60d0bd6b385"
+    },
+    {
+      "name": "pengutunnel.gz.part-001",
+      "size": 600000,
+      "sha256": "6e64cee51849446928bc12077e3cadcabcd9df4e5e0379d3345091292d70aabd",
+      "git_sha": "310dc63621b22f060084ed0c5222ec181a51f43b"
+    },
+    {
+      "name": "pengutunnel.gz.part-002",
+      "size": 600000,
+      "sha256": "028e3777f8376979982624c5cea7c3c3922006648cacab07b723b564aadbd6ff",
+      "git_sha": "248a5890f436529ff244b0ba2cf0397b5da343a6"
+    },
+    {
+      "name": "pengutunnel.gz.part-003",
+      "size": 600000,
+      "sha256": "68a286d1983ad26e732669c6b8bc1be8b4dd4fd02f91f70d3acee4a03852caa2",
+      "git_sha": "b7c3eb652cd20b9626f7587e7a3da475261aa11a"
+    },
+    {
+      "name": "pengutunnel.gz.part-004",
+      "size": 600000,
+      "sha256": "9b74fb40e5b6c350d49a491fd9b0caf4944d0beef7bd7bb741803b0ed5538c61",
+      "git_sha": "72fb81ec0ded6d0e677acfd7388d01cc036d386a"
+    },
+    {
+      "name": "pengutunnel.gz.part-005",
+      "size": 600000,
+      "sha256": "017d04529075649d66f623bf96b3ccfbc2e3998cbef3de072bbd870546e46550",
+      "git_sha": "289a4cfa7715f448a89c6e0337c342a4fd8d5084"
+    },
+    {
+      "name": "pengutunnel.gz.part-006",
+      "size": 600000,
+      "sha256": "9eed85d23b472062355b55114529bd651a0a1cceb563fec765ed1f9c4738aec8",
+      "git_sha": "1d6bafd73ccd46fa1a5cf61b5419c71950ac7db3"
+    },
+    {
+      "name": "pengutunnel.gz.part-007",
+      "size": 600000,
+      "sha256": "6af4dc8a3a57ae2dc3760c591e35e5372ce133647d1d395d082ff0a053541417",
+      "git_sha": "212c247bcc782cc156360e17c3da23fb80811f49"
+    },
+    {
+      "name": "pengutunnel.gz.part-008",
+      "size": 600000,
+      "sha256": "1a5f54df601c116dec4643b0b0cd5c54c65c5b45227c67f58eb8c7dc3adc4aa2",
+      "git_sha": "3baeb8b5a92f93831e7d2ed88953076a3755fa86"
+    },
+    {
+      "name": "pengutunnel.gz.part-009",
+      "size": 600000,
+      "sha256": "7811dcf219869d49c9d379739e5fe951ef051148f2e2e469b51e97400dffa094",
+      "git_sha": "56c5e3595fc8c00a69b551b4fccf1ad6cd1ea394"
+    },
+    {
+      "name": "pengutunnel.gz.part-010",
+      "size": 600000,
+      "sha256": "efe64cd4872e28e2b38614b48825cdb2ae62b221f0de0a00dd5ee6678ae3cbf2",
+      "git_sha": "2ece0aa8c3eb53d435c9314fe70d228628af52c9"
+    },
+    {
+      "name": "pengutunnel.gz.part-011",
+      "size": 600000,
+      "sha256": "3416d49144c3fe9dea6c04afd7096a8b6efb1cc267085ebd424ab48319e95d13",
+      "git_sha": "99dddba910ba3d2f726bbfaec75becdc5a58cd06"
+    },
+    {
+      "name": "pengutunnel.gz.part-012",
+      "size": 600000,
+      "sha256": "72e36a3aef0f3283231b6d99441a63b7a13279aaf40eab64652a847dc5b13a7f",
+      "git_sha": "450dee3b41aad326b64fd346a31e19896c820a93"
+    },
+    {
+      "name": "pengutunnel.gz.part-013",
+      "size": 600000,
+      "sha256": "9baee05ac50fab60c01f7a8e9e0ea43b287e68cf14d20b61161d6cc9ba73958e",
+      "git_sha": "102c9aec527a0d42431fa6e096f584e7f853a03e"
+    },
+    {
+      "name": "pengutunnel.gz.part-014",
+      "size": 600000,
+      "sha256": "b77672f5c5ef88149009372c81b819fbb38972340680ad69d8c1b7eb66a7328c",
+      "git_sha": "11e460a2b009b9ace631699b6c07b67eeb6152c9"
+    },
+    {
+      "name": "pengutunnel.gz.part-015",
+      "size": 600000,
+      "sha256": "4d3db78bbcbf71865ccb934d5b9073997f1c7e587e0ee28522cf5636b9f39463",
+      "git_sha": "dfd271c1e1be6a651c5747365db7e17f66ee9491"
+    },
+    {
+      "name": "pengutunnel.gz.part-016",
+      "size": 600000,
+      "sha256": "9db333fb29b70b14cbfd5b89099730955c25a47c841ecf75c14cbe0a84ba1348",
+      "git_sha": "2e98bc6e24e78cb223376cb4a51ade4298f2e7e1"
+    },
+    {
+      "name": "pengutunnel.gz.part-017",
+      "size": 600000,
+      "sha256": "6c478d0b52d4f7e824f90cfffab6b7dcc715ed1dd6ee75bcb2fd88736b872adc",
+      "git_sha": "b6be2f5bb8f5675d7f9e506124f5f104f9659ab2"
+    },
+    {
+      "name": "pengutunnel.gz.part-018",
+      "size": 600000,
+      "sha256": "d748cddba920c2ee8364780e9c9af96712e4bbf93a1331928a1047f816af856a",
+      "git_sha": "090749549abe7a5a74e7f12ac416a02cfe56c815"
+    },
+    {
+      "name": "pengutunnel.gz.part-019",
+      "size": 600000,
+      "sha256": "caa51d36d014db02f6ba3a16e74f1c94c053a5365f5048d50131578d2264fb11",
+      "git_sha": "bbaca3e84379d894a76ef3b5af9fb36d17ff672f"
+    },
+    {
+      "name": "pengutunnel.gz.part-020",
+      "size": 600000,
+      "sha256": "b3c3b42049fb9cee20cd41cb919f4b941f1035f9502a788755cb0c245a3ca0e9",
+      "git_sha": "76881440cfe64159c249c352c3eb0d05901999ab"
+    },
+    {
+      "name": "pengutunnel.gz.part-021",
+      "size": 600000,
+      "sha256": "321b572b8e0258c37deb937f03f885a0de9552dcdd657c1b0bcd314922e95313",
+      "git_sha": "3986ac279906293ac3d2f61f3c51432077997880"
+    },
+    {
+      "name": "pengutunnel.gz.part-022",
+      "size": 600000,
+      "sha256": "cda4a8daaac2814fc30fc63b48a5c8ddd292f10d5276a3b4cbec7f69c8450ced",
+      "git_sha": "528d2ea21f2baecda8a5b68e371518f8867ac2a3"
+    },
+    {
+      "name": "pengutunnel.gz.part-023",
+      "size": 600000,
+      "sha256": "5b4bdae8033ed1e5a0f49ff5f3ab04f56f79cf0555ec26c9b08a90da053bf0d4",
+      "git_sha": "4d3b142bef779777ad2425d92da18440cf444dd8"
+    },
+    {
+      "name": "pengutunnel.gz.part-024",
+      "size": 600000,
+      "sha256": "ef2b5142264221c70841770bf16e507b54c96e6af3a0af97ed229b238d90e7f2",
+      "git_sha": "330856ddadfc1f02ea9545613cd28977ca61e713"
+    },
+    {
+      "name": "pengutunnel.gz.part-025",
+      "size": 600000,
+      "sha256": "3d67c97b2cbdcee75c31b1926a9f8a9968ab5fb2f2ae31380827cabdc1004274",
+      "git_sha": "858ef126d6bffd633398ae5eeb1d4194f382f439"
+    },
+    {
+      "name": "pengutunnel.gz.part-026",
+      "size": 600000,
+      "sha256": "894766e42a35da84f96a15bb128261327496df94fb12059ef316ef5a2eb50d07",
+      "git_sha": "78f444225ccade1c8c7af06f92a4b0a6fde11bb9"
+    },
+    {
+      "name": "pengutunnel.gz.part-027",
+      "size": 600000,
+      "sha256": "8f0377e01a0d07b78cb37dc9d47e290bbcbe11c1df88890b2cef7b09736bf549",
+      "git_sha": "4b81668db43ccbe19a12b000b99212892cdb9f3d"
+    },
+    {
+      "name": "pengutunnel.gz.part-028",
+      "size": 600000,
+      "sha256": "97866b5cebe6dd57cc7f685dbea63d0c4e9e63ff290d9336aa54b308689bfa1b",
+      "git_sha": "00a5bd2d110c14538e1b681747eab839a28aa1cd"
+    },
+    {
+      "name": "pengutunnel.gz.part-029",
+      "size": 498106,
+      "sha256": "db15de62b5513eac016b884ce8bd0e973336af68770614f318d28c8bc8670481",
+      "git_sha": "843cd83546e98f65fe2e81bbc72d1d54ed585960"
+    }
+  ],
+  "archive": {
+    "name": "pengutunnel.gz",
+    "size": 17898106,
+    "sha256": "1b87d4cbfcf2865916b998593c2e3a2839031a06dc6eeefe2e4008f238918842",
+    "git_sha": "91be185f344f07562e20acf176b6e0746a5152d2"
+  },
+  "binary": {
+    "name": "PenguTunnel-5.0.4-Offline-pengutunnel",
+    "size": 43950204,
+    "sha256": "eb6ddde796ab8e456946324578a88b775b3c37c65a0f2573f133bafd0d7f6058",
+    "git_sha": "3e4184b824ced7c5bf04afb726fafa2af218efee"
+  },
+  "installer": {
+    "name": "install.sh",
+    "size": 73667,
+    "sha256": "a49fc0b1b0c426ce9d6925dddca7d4b3ee8c4bb04952532d5e91232cf0e8a7a2",
+    "git_sha": "bf88173a3a181a5160b9a82b98c6903a3d73cec8"
+  }
+}

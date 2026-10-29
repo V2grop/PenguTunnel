@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# PenguTunnel upstream menu adapted for a local, hash-pinned v4.2.1 core.
+# Pengu upstream menu 4.2.5 adapted for a pinned offline core 5.0.4
 BUNDLE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)" || exit 1
-OFFLINE_SHA256="793e594170065186df4979e6fffa360b6b9796f7cb4595493c8f48c2ed4cc9fd"
+OFFLINE_SHA256="eb6ddde796ab8e456946324578a88b775b3c37c65a0f2573f133bafd0d7f6058"
 [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]] || { echo "Linux amd64 is required." >&2; exit 1; }
 command -v sha256sum >/dev/null 2>&1 || { echo "sha256sum is required." >&2; exit 1; }
 set -o pipefail
 
-SCRIPT_VERSION="4.1.0"
+SCRIPT_VERSION="4.2.5"
 INSTALL_DIR="/root/pengutunnel"          # core + configs + logs all live here
 BIN_PATH="/root/pengutunnel/pengutunnel" # the core binary
 SERVICE_DIR="/etc/systemd/system"
@@ -103,40 +103,9 @@ refresh_core_version(){ local k; k="$(stat -c '%Y-%s' "$BIN_PATH" 2>/dev/null)";
 core_at_least(){ refresh_core_version; [[ -n "$CORE_VER" && "$(printf '%s\n%s\n' "$1" "$CORE_VER" | sort -V | head -1)" == "$1" ]]; }
 
 load_sysinfo(){
-  local tmp; tmp="$(mktemp -d 2>/dev/null)" || { tmp="/tmp/.pengu.$$"; mkdir -p "$tmp"; }
-  ( curl -fsS -4 --max-time 4 https://1.1.1.1/cdn-cgi/trace 2>/dev/null | sed -n 's/^ip=//p' > "$tmp/v4" ) &
-  ( curl -fsS -6 --max-time 2 https://api6.ipify.org 2>/dev/null | grep -oE '^[0-9a-fA-F:]+$' | head -1 > "$tmp/v6" ) &
-  ( curl -fsS --connect-timeout 2 --max-time 4 "$VERSION_URL_MIR" 2>/dev/null | tr -d '\r\n ' > "$tmp/verm" ) &
-  ( curl -fsS --connect-timeout 2 --max-time 4 "$VERSION_URL" 2>/dev/null | tr -d '\r\n ' > "$tmp/verf" ) &
-  ( curl -fsS -4 --max-time 4 "$WHOAMI_URL_MIR" 2>/dev/null > "$tmp/mir" ) &
-  ( curl -fsS -4 --max-time 5 "$WHOAMI_URL" 2>/dev/null > "$tmp/geo" ) &
-  ( curl -fsS --connect-timeout 2 --max-time 4 "$(olddom "$VERSION_URL_MIR")" 2>/dev/null | tr -d '\r\n ' > "$tmp/vero" ) &
-  ( curl -fsS -4 --max-time 5 "$(olddom "$WHOAMI_URL")" 2>/dev/null > "$tmp/geoo" ) &
-  ( ipx="$(curl -fsS -4 --max-time 3 https://1.1.1.1/cdn-cgi/trace 2>/dev/null | sed -n 's/^ip=//p')"; [ -n "$ipx" ] && curl -fsS --max-time 3 "http://ipwhois.app/json/${ipx}?fields=ip,country_code,isp" 2>/dev/null > "$tmp/ext" ) &
-  local i=0
-  while [ $i -lt 30 ]; do
-    if [ -s "$tmp/v4" ] && { [ -s "$tmp/ext" ] || [ -s "$tmp/geo" ] || [ -s "$tmp/geoo" ]; } && { [ -s "$tmp/verm" ] || [ -s "$tmp/verf" ] || [ -s "$tmp/vero" ]; }; then break; fi
-    sleep 0.1; i=$((i+1))
-  done
-  kill $(jobs -p) 2>/dev/null; wait 2>/dev/null
-  SYS_IP="$(cat "$tmp/v4" 2>/dev/null)"
-  SYS_IP6="$(cat "$tmp/v6" 2>/dev/null)"
-  CORE_LATEST="$(cat "$tmp/verm" 2>/dev/null)"; [ -n "$CORE_LATEST" ] || CORE_LATEST="$(cat "$tmp/verf" 2>/dev/null)"
-  [ -n "$CORE_LATEST" ] || CORE_LATEST="$(cat "$tmp/vero" 2>/dev/null)"
-  local ext geo mir; ext="$(cat "$tmp/ext" 2>/dev/null)"; geo="$(cat "$tmp/geo" 2>/dev/null)"; mir="$(cat "$tmp/mir" 2>/dev/null)"
-  [ -n "$geo" ] || geo="$(cat "$tmp/geoo" 2>/dev/null)"
-  if [ -n "$ext" ]; then
-    [ -n "$SYS_IP" ] || SYS_IP="$(sed -n 's/.*"ip":"\([^"]*\)".*/\1/p' <<<"$ext")"
-    SYS_LOC="$(sed -n 's/.*"country_code":"\([^"]*\)".*/\1/p' <<<"$ext")"
-    SYS_DC="$(sed -n 's/.*"isp":"\([^"]*\)".*/\1/p' <<<"$ext")"
-  fi
-  if [ -z "$SYS_LOC" ] || [ -z "$SYS_DC" ]; then
-    [ -n "$SYS_LOC" ] || SYS_LOC="$(sed -n 's/.*"country":"\([^"]*\)".*/\1/p' <<<"$geo")"
-    [ -n "$SYS_DC" ] || SYS_DC="$(sed -n 's/.*"asn":"\([^"]*\)".*/\1/p' <<<"$geo")"
-  fi
-  [ -n "$SYS_IP" ] || SYS_IP="$(sed -n 's/.*"ip":"\([^"]*\)".*/\1/p' <<<"$mir")"
-  [ -n "$SYS_IP" ] || SYS_IP="$(sed -n 's/.*"ip":"\([^"]*\)".*/\1/p' <<<"$geo")"
-  rm -rf "$tmp"
+  SYS_IP="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<NF;i++) if($i=="src") {print $(i+1);exit}}')"
+  SYS_IP6="$(ip -6 -o addr show scope global 2>/dev/null | awk 'NR==1 {split($4,a,"/");print a[1]}')"
+  SYS_LOC="local"; SYS_DC="offline"; CORE_LATEST="v5.0.4"
 }
 
 banner(){
@@ -240,7 +209,6 @@ ensure_core(){
   for id in $(list_ids); do
     systemctl try-restart "$(svc_of "$id").service" || warn "Could not restart $(svc_of "$id"); inspect its service log."
   done
-  return 0
 }
 
 gen_psk(){ head -c 32 /dev/urandom | base64; }
@@ -281,25 +249,16 @@ cn_side(){
 }
 cn_cat(){
   echo; echo "Transport:"
-  echo "   ${W}1${N}) tcp       ${D}— tcp forward        (no tun)${N}"
+  echo "   ${W}1${N}) no-tun    ${D}— port forward: tcpfwd / tls / ws / wss${N}"
   echo "   ${W}2${N}) tun       ${D}— L3 tunnel (tcp / ipx)${N}"
   echo "   ${W}3${N}) dns       ${D}— DNS mimicry        (UDP/53)${N}"
   echo "   ${W}4${N}) ssh       ${D}— SSH mimicry        (TCP/22)${N}"
-  echo "   ${W}5${N}) tls       ${D}— real TLS, whitelisted on the Iran path (tun or no-tun)${N}"
+  echo "   ${W}5${N}) tls       ${D}— port forward over real TLS (no tun)${N}"
   wask 'select' "${_r_cat:-2}"; (( WIZ_BACK )) && return 0
   _r_cat="$WIZ_VAL"; cat="$WIZ_VAL"
-  if [[ "$cat" == "5" ]]; then
-    echo; echo "TLS mode:"
-    echo "   ${W}1${N}) no-tun ${G}(recommended)${N} — tcpfwd port-forward over TLS (what panels use)"
-    echo "   ${W}2${N}) tun             — full L3 IP tunnel over TLS"
-    wask 'select' "${_r_tlsmode:-1}"; (( WIZ_BACK )) && return 0; _r_tlsmode="$WIZ_VAL"
-    if [[ "$_r_tlsmode" == "2" ]]; then
-      cat=3; is_ipx=0; no_mux=0; no_pool=0; transport=tls; cat_tls=1; return 0
-    fi
-    GO_L4=1; l4_tls=1; return 4
-  fi
+  if [[ "$cat" == "5" ]]; then GO_L4=1; l4_kind=tls; return 4; fi
   case "$cat" in 2) cat=3;; 3) cat=4;; 4) cat=5;; esac
-  if [[ "$cat" == "1" ]]; then GO_L4=1; return 4; fi
+  if [[ "$cat" == "1" ]]; then GO_L4=1; l4_kind=tcpfwd; return 4; fi
   is_ipx=0; no_mux=0; no_pool=0; transport=tcp
   if [[ "$cat" == "4" ]]; then transport=dns; no_mux=1; no_pool=1
   elif [[ "$cat" == "5" ]]; then transport=ssh; no_mux=1; no_pool=1; fi
@@ -310,7 +269,6 @@ cn_ensure(){
 }
 cn_tuntype(){
   [[ "$cat" == "3" ]] || return 3
-  [[ "$cat_tls" == "1" ]] && return 3   # TLS tun carrier already chosen in the Transport menu
   echo; echo "tun type:"
   echo "   ${W}1${N}) tcp    ${D}— plain TCP over the tun (scaled by pool)${N}"
   echo "   ${W}2${N}) udp    ${D}— plain UDP over the tun (scaled by pool)${N}"
@@ -345,16 +303,6 @@ cn_icmp(){
   echo "  (a firewall drops unasked replies): ${W}8${D} on Kharej + ${W}0${D} on Iran = a real ping + its answer${N}"
   wask 'ICMP type' "${icmp_type:-0}"; (( WIZ_BACK )) && return 0; icmp_type="$WIZ_VAL"
   wask 'ICMP code' "${icmp_code:-0}"; (( WIZ_BACK )) && return 0; icmp_code="$WIZ_VAL"
-}
-cn_tls(){
-  [[ "$transport" == "tls" ]] || return 3
-  echo; echo "  ${D}TLS carrier: a real TLS session (the client speaks a browser fingerprint via uTLS)."
-  echo "  ${D}The Iran policer whitelists any real TLS handshake, so SNI only matters for looks.${N}"
-  wask 'SNI (ClientHello server name)' "${tls_sni:-www.cloudflare.com}"; (( WIZ_BACK )) && return 0; tls_sni="$WIZ_VAL"
-  echo; echo "uTLS fingerprint:"
-  echo "   ${W}1${N}) chrome ${G}(recommended)${N}   ${W}2${N}) firefox   ${W}3${N}) safari   ${W}4${N}) edge   ${W}5${N}) ios"
-  wask 'select' "${_r_fp:-1}"; (( WIZ_BACK )) && return 0; _r_fp="$WIZ_VAL"
-  case "$_r_fp" in 2) tls_fp=firefox;; 3) tls_fp=safari;; 4) tls_fp=edge;; 5) tls_fp=ios;; *) tls_fp=chrome;; esac
 }
 cn_dir(){
   if [[ "$is_ipx" == "1" ]]; then dir=1; _cn_role; return 3; fi
@@ -508,11 +456,11 @@ configure_new(){
   local side cat transport="tcp" icmp_type=0 icmp_code=0 is_ipx=0 no_mux=1 no_pool=0 dir role
   local tun_addr tun_name mtu mux=1 pool_conn=1 algo port peer id health psk tune_profile workers src_ip bind_if spoof_src="" spoof_dst="" use_spoof
   local dw_lport="" dw_rport="" lic_enabled="false" lic_key="" fwd_block="" GO_L4=0 CN_ABORT=0
-  local tls_sni="" tls_fp="chrome" l4_tls=0 cat_tls=0
-  local _r_side _r_cat _r_tt _r_ipx _r_dir _r_fp _r_tlsmode
-  wiz_run cn_side cn_cat cn_ensure cn_tuntype cn_ipxproto cn_icmp cn_tls cn_dir cn_tunname cn_mtu cn_profile cn_workers cn_tunaddr cn_peer cn_ipxextra cn_portblock cn_pool cn_algo cn_health cn_psk cn_license cn_forward || return
+  local l4_kind=tcpfwd
+  local _r_side _r_cat _r_tt _r_ipx _r_dir
+  wiz_run cn_side cn_cat cn_ensure cn_tuntype cn_ipxproto cn_icmp cn_dir cn_tunname cn_mtu cn_profile cn_workers cn_tunaddr cn_peer cn_ipxextra cn_portblock cn_pool cn_algo cn_health cn_psk cn_license cn_forward || return
   [[ "$CN_ABORT" == "1" ]] && { pause; return; }
-  [[ "$GO_L4" == "1" ]] && { configure_l4 "$side" tcpfwd "$l4_tls"; return; }
+  [[ "$GO_L4" == "1" ]] && { configure_l4 "$side" "$l4_kind"; return; }
   mkdir -p "$INSTALL_DIR"
   local conf; conf="${INSTALL_DIR}/${id}.toml"
   {
@@ -527,10 +475,6 @@ configure_new(){
       elif [[ "$role" == "server" ]]; then echo "listen = \"0.0.0.0:${port}\""
       else echo "remote = \"${peer}:${port}\""; fi
       echo "pool_connection = ${pool_conn}"
-      if [[ "$transport" == "tls" ]]; then
-        echo "sni = \"${tls_sni:-www.cloudflare.com}\""
-        echo "tls_fingerprint = \"${tls_fp:-chrome}\""
-      fi
     fi
     echo ""
     if [[ "$is_ipx" == "1" ]]; then
@@ -625,37 +569,131 @@ EOF
   pause
 }
 
+# configure_l4 wizard predicates; they read configure_l4's locals (bash dynamic scope).
+# reach = how the side that dials reaches the other one in a tls/ws/wss tunnel: simple |
+# cdn | spoof | cdnspoof. Direct (the Iran edge dials) offers all of them; reverse (the exit
+# dials) only a CDN in front of the Iran server, from core v5.0.2 (any CDN; v5.0.1 knew only Cloudflare).
+l4_has_reach(){
+  [[ "$listens" != "1" && "$transport" != "tcpfwd" ]] || return 1
+  [[ "$ldir" == "direct" ]] || [[ "$cdn_rev" == "1" && "$transport" != "tls" ]]
+}
+l4_cdn(){ l4_has_reach && [[ "$reach" == cdn || "$reach" == cdnspoof ]]; }
+l4_spoof(){ l4_has_reach && [[ "$reach" == spoof || "$reach" == cdnspoof ]]; }
+l4_tlsopt(){ [[ "$listens" != "1" && ( "$transport" == tls || "$transport" == wss || "$transport" == xhttps ) ]]; }
+l4_http(){ [[ "$transport" == ws || "$transport" == wss || "$transport" == xhttp || "$transport" == xhttps ]]; }   # speaks HTTP: a CDN can proxy it
+l4_xhttp(){ [[ "$transport" == xhttp || "$transport" == xhttps ]]; }
+l4_is_ipv4(){
+  [[ "$1" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+  local o; for o in "${BASH_REMATCH[@]:1}"; do (( 10#$o <= 255 )) || return 1; done
+}
+l4_is_domain(){ [[ "$1" =~ ^([A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9]$ ]]; }
+
 configure_l4(){
-  local side="$1" transport="$2" l4_tls="${3:-0}"   # transport = tcpfwd; l4_tls=1 wraps carriers in real TLS
-  local tls_sni="" tls_fp="chrome" _r_fp=""
+  local side="$1" transport="${2:-tcpfwd}"   # the no-tun type: tcpfwd | tls | ws | wss
+  local tls_sni="" tls_fp="chrome" _r_fp="" ws_path="" xh_path="" xh_cdn="" _r_kind="" reach="simple" cdn_domain="" cdn_rev=0
   local role; [[ "$side" == "1" ]] && role="server" || role="client"
   [[ -x "$BIN_PATH" ]] || { install_prereqs; install_core || { pause; return; }; }
+  core_at_least v5.0.2 && cdn_rev=1   # reverse through any CDN: the exit asks the Iran server its IP (v5.0.2)
   echo "  ${D}(tip: type ${W}b${N}${D} at any question to go back one step)${N}"
   local ldir listens=0 port peer pool algo health psk tune_profile workers swin l4hdr="" id sidename pp_gate fspecs="" lic_key lic_block="" fwd_block=""
-  local _r_dir="" _r_hdr=""
-  local step=dir
+  local _r_dir="" _r_hdr="" spoof_names="" spoof_ttl=0 spoof_strict="n" edge_ip=""
+  case "$transport" in tls) _r_kind=2;; ws) _r_kind=3;; wss) _r_kind=4;; xhttp) _r_kind=5;; xhttps) _r_kind=6;; *) _r_kind=1;; esac
+  local step=kind
   while :; do
     case "$step" in
+    kind)
+      echo; echo "No-tun type (set the SAME on both servers):"
+      echo "   ${W}1${N}) tcpfwd ${D}— plain tcp carriers (optional custom header)${N}"
+      echo "   ${W}2${N}) tls    ${D}— carriers inside a real TLS session${N}"
+      echo "   ${W}3${N}) ws     ${D}— carriers as a WebSocket over plain HTTP${N}"
+      echo "   ${W}4${N}) wss    ${D}— carriers as a WebSocket inside TLS (HTTPS, CDN-friendly)${N}"
+      echo "   ${W}5${N}) xhttp  ${D}— carriers as one long HTTP POST over plain HTTP (no WebSocket)${N}"
+      echo "   ${W}6${N}) xhttps ${D}— the same POST inside TLS (looks like a plain HTTPS upload, CDN-friendly)${N}"
+      wask 'select' "${_r_kind:-1}"; (( WIZ_BACK )) && { warn "this is the first step"; continue; }; _r_kind="$WIZ_VAL"
+      case "$_r_kind" in 2) transport=tls;; 3) transport=ws;; 4) transport=wss;; 5) transport=xhttp;; 6) transport=xhttps;; *) transport=tcpfwd;; esac
+      if [[ "$transport" != "tcpfwd" ]] && ! core_at_least v4.2.3; then
+        err "type ${transport} needs core v4.2.3 or newer (this server runs ${CORE_VER:-unknown}) - update the core first"
+        continue
+      fi
+      if l4_xhttp && ! core_at_least v5.0.3; then
+        err "type ${transport} needs core v5.0.3 or newer on BOTH servers (this server runs ${CORE_VER:-unknown}) - update the core first"
+        continue
+      fi
+      hr; step=dir ;;
     dir)
+      # tcpfwd: reverse is recommended; tls / ws / wss: direct (a CDN and sni_spoof live
+      # there). The numbers stay the same either way, so both servers read alike.
+      local _rec_r=" ${G}(recommended)${N}" _rec_d="              " _dir_def=1
+      if [[ "$transport" != "tcpfwd" ]]; then _rec_r="              "; _rec_d=" ${G}(recommended)${N}"; _dir_def=2; fi
       echo; echo "Direction:"
-      echo "   ${W}1${N}) reverse ${G}(recommended)${N} — Kharej dials Iran; Iran listens"
-      echo "   ${W}2${N}) direct            — Iran dials Kharej; Kharej listens"
+      echo "   ${W}1${N}) reverse${_rec_r} — Kharej dials Iran; Iran listens"
+      echo "   ${W}2${N}) direct ${_rec_d} — Iran dials Kharej; Kharej listens"
       echo "  ${D}Set the SAME direction on both servers.${N}"
-      wask 'select' "${_r_dir:-1}"; (( WIZ_BACK )) && { warn "this is the first step"; continue; }
+      if [[ "$transport" != "tcpfwd" && "$cdn_rev" == "1" ]]; then
+        echo "  ${D}A CDN or sni_spoof is chosen on the side that dials: direct = the Iran server,${N}"
+        echo "  ${D}reverse = the Kharej server (a CDN only; sni_spoof needs direct).${N}"
+      elif [[ "$transport" != "tcpfwd" ]]; then
+        echo "  ${D}A CDN or sni_spoof needs direct; both are chosen on the Iran server.${N}"
+      fi
+      wask 'select' "${_r_dir:-$_dir_def}"; (( WIZ_BACK )) && { step=kind; continue; }
       _r_dir="$WIZ_VAL"; [[ "$WIZ_VAL" == "2" ]] && ldir="direct" || ldir="reverse"
       listens=0
       if [[ "$role" == "server" && "$ldir" == "reverse" ]] || [[ "$role" == "client" && "$ldir" == "direct" ]]; then listens=1; fi
+      hr
+      if l4_has_reach; then step=reach; else reach=simple; step=peerport; fi ;;
+    reach)
+      # How the side that dials reaches the other one. A CDN proxies HTTP only (ws / wss, not
+      # the raw tls type); only the Iran edge can inject, so sni_spoof is direct-only.
+      local _opts=(simple) _o _i=0 _def=1 _other=Kharej
+      [[ "$ldir" == "direct" ]] || _other=Iran
+      [[ "$transport" != "tls" ]] && _opts+=(cdn)
+      if [[ "$ldir" == "direct" ]]; then _opts+=(spoof); [[ "$transport" != "tls" ]] && _opts+=(cdnspoof); fi
+      echo "How does this server reach the ${_other} server?"
+      for _o in "${_opts[@]}"; do
+        _i=$((_i+1)); [[ "$_o" == "$reach" ]] && _def=$_i
+        case "$_o" in
+          simple)   echo "   ${W}${_i}${N}) simple ${G}(recommended)${N} ${D}— straight to the ${_other} server's IP${N}";;
+          cdn)      echo "   ${W}${_i}${N}) CDN                ${D}— the ${_other} server is behind a CDN (Cloudflare, ArvanCloud, ...), reached by its domain${N}";;
+          spoof)    echo "   ${W}${_i}${N}) sni_spoof          ${D}— to the Kharej IP, plus a fake allowed site name to fool the filter${N}";;
+          cdnspoof) echo "   ${W}${_i}${N}) CDN + sni_spoof    ${D}— through the CDN, plus a fake allowed site name to fool the filter${N}";;
+        esac
+      done
+      [[ "$ldir" == "direct" ]] && echo "  ${D}sni_spoof is only for internet shutdowns (when just a few sites stay open). Normal tunnel: pick 1.${N}"
+      wask 'select' "$_def"; (( WIZ_BACK )) && { step=dir; continue; }
+      if [[ "$WIZ_VAL" =~ ^[0-9]+$ ]] && (( WIZ_VAL >= 1 && WIZ_VAL <= ${#_opts[@]} )); then reach="${_opts[WIZ_VAL-1]}"; else reach=simple; fi
       hr; step=peerport ;;
     peerport)
       if [[ "$listens" == "1" ]]; then
+        l4_http && echo "  ${D}Behind a CDN use a port it proxies (Cloudflare HTTPS: 443 2053 2083 2087 2096 8443; plain HTTP: 80 8080 8880 2052 2082 2086 2095).${N}"
         if [[ "$role" == "server" ]]; then wask 'carrier listen port (Kharej dials this)' "${port:-443}"; else wask 'carrier listen port (the Iran edge dials this)' "${port:-443}"; fi
         (( WIZ_BACK )) && { step=dir; continue; }; port="$WIZ_VAL"
-      elif [[ "$role" == "server" ]]; then
-        wask_req 'peer public IP (the Kharej exit)'; (( WIZ_BACK )) && { step=dir; continue; }; peer="$WIZ_VAL"
-        wask 'carrier port (the Kharej exit listens on)' "${port:-443}"; (( WIZ_BACK )) && { continue; }; port="$WIZ_VAL"
+      elif l4_cdn; then
+        local _other=Kharej _who='the Kharej exit'
+        [[ "$ldir" == "direct" ]] || { _other=Iran; _who='the Iran edge'; }
+        echo "  ${D}CDN: point a PROXIED (orange cloud) record of your domain at the ${_other} server's${N}"
+        echo "  ${D}IP. The domain is sent as the SNI and the Host header.${N}"
+        if [[ -n "$cdn_domain" ]]; then wask 'your domain on the CDN' "$cdn_domain"; else wask_req 'your domain on the CDN (e.g. tunnel.example.com)'; fi
+        (( WIZ_BACK )) && { step=reach; continue; }
+        l4_is_domain "$WIZ_VAL" || { err "'${WIZ_VAL}' is not a domain name - the CDN routes by your domain"; continue; }
+        cdn_domain="$WIZ_VAL"
+        echo "  ${D}Optional: a clean CDN edge IP to dial instead of resolving the domain on this server.${N}"
+        while :; do
+          wask 'CDN edge IP to dial (blank = resolve the domain)' ""
+          (( WIZ_BACK )) || [[ -z "$WIZ_VAL" ]] || l4_is_ipv4 "$WIZ_VAL" && break
+          err "'${WIZ_VAL}' is not an IPv4 address"
+        done
+        (( WIZ_BACK )) && continue; edge_ip="$WIZ_VAL"
+        local _cdn_ports="443 2053 2083 2087 2096 8443" _cdn_def=443
+        [[ "$transport" == "ws" || "$transport" == "xhttp" ]] && { _cdn_ports="80 8080 8880 2052 2082 2086 2095"; _cdn_def=80; }
+        echo "  ${D}Use a port your CDN proxies (Cloudflare ${transport}: ${_cdn_ports}); the ${_other} server listens on the SAME port.${N}"
+        wask "carrier port (${_who} listens on)" "${port:-$_cdn_def}"; (( WIZ_BACK )) && continue; port="$WIZ_VAL"
       else
-        wask_req 'peer public IP (the Iran edge)'; (( WIZ_BACK )) && { step=dir; continue; }; peer="$WIZ_VAL"
-        wask 'carrier port (the Iran edge listens on)' "${port:-443}"; (( WIZ_BACK )) && { continue; }; port="$WIZ_VAL"
+        local _peer_q='peer public IP (the Iran edge)' _port_q='carrier port (the Iran edge listens on)'
+        [[ "$role" == "server" ]] && { _peer_q='peer public IP (the Kharej exit)'; _port_q='carrier port (the Kharej exit listens on)'; }
+        wask_req "$_peer_q"; (( WIZ_BACK )) && { l4_has_reach && step=reach || step=dir; continue; }
+        l4_is_ipv4 "$WIZ_VAL" || l4_is_domain "$WIZ_VAL" || { err "'${WIZ_VAL}' is not an IP address"; continue; }
+        peer="$WIZ_VAL"
+        wask "$_port_q" "${port:-443}"; (( WIZ_BACK )) && { continue; }; port="$WIZ_VAL"
       fi
       step=profile ;;
     profile)
@@ -679,15 +717,9 @@ configure_l4(){
       wask 'pool (carrier connections)' "${pool:-2}"; (( WIZ_BACK )) && { core_at_least v4.1.0 && step=swin || step=workers; continue; }; pool="$WIZ_VAL"; [[ "$pool" =~ ^[0-9]+$ && "$pool" -ge 1 ]] || pool=2
       step=header ;;
     header)
-      if [[ "$l4_tls" == "1" ]]; then
-        echo "  ${D}TLS carrier: the client speaks a real browser TLS handshake (uTLS). The${N}"
-        echo "  ${D}Iran policer whitelists any real TLS, so SNI only matters for looks.${N}"
-        wask 'SNI (ClientHello server name)' "${tls_sni:-www.cloudflare.com}"; (( WIZ_BACK )) && { step=pool; continue; }; tls_sni="$WIZ_VAL"
-        echo "  uTLS fingerprint:"
-        echo "   ${W}1${N}) chrome ${G}(recommended)${N}   ${W}2${N}) firefox   ${W}3${N}) safari   ${W}4${N}) edge   ${W}5${N}) ios"
-        wask 'select' "${_r_fp:-1}"; (( WIZ_BACK )) && { continue; }; _r_fp="$WIZ_VAL"
-        case "$_r_fp" in 2) tls_fp=firefox;; 3) tls_fp=safari;; 4) tls_fp=edge;; 5) tls_fp=ios;; *) tls_fp=chrome;; esac
-        l4hdr=""; step=algo; continue
+      if [[ "$transport" != "tcpfwd" ]]; then
+        # tls / ws / wss / xhttp / xhttps open with their own handshake, never a custom header.
+        l4hdr=""; [[ "$transport" == "tls" ]] && step=tlsopt || step=ws; continue
       fi
       echo "  ${D}header = how each carrier opens on the wire. Set the SAME on both servers.${N}"
       echo "   ${W}0${N}) none            ${D}— plain tcp${N}"
@@ -697,9 +729,97 @@ configure_l4(){
       wask 'header' "${_r_hdr:-3}"; (( WIZ_BACK )) && { step=pool; continue; }; _r_hdr="$WIZ_VAL"
       case "$_r_hdr" in 1) l4hdr="PGprotocol-NUM1";; 2) l4hdr="PGprotocol-NUM2";; 3) l4hdr="PGprotocol-NUM3";; *) l4hdr="";; esac
       step=algo ;;
+    ws)
+      # The HTTP wraps' request path (ws / wss: the upgrade, xhttp / xhttps: the POST).
+      if l4_xhttp; then
+        echo "  ${D}xhttp: each carrier is one long  POST <path>  whose body streams the data both ways.${N}"
+        echo "  ${D}Set the SAME path on both servers. Anything else gets a plain 404.${N}"
+        wask 'HTTP POST path' "${xh_path:-/xhttp}"; (( WIZ_BACK )) && { step=pool; continue; }; xh_path="$WIZ_VAL"
+        [[ "$xh_path" == /* ]] || xh_path="/${xh_path}"
+        # CDN-compatible (xhttp_cdn): a CDN buffers one endless chunked POST, so through a CDN
+        # each carrier must instead be a long GET download + short bounded POST uploads. BOTH
+        # servers must agree. Needs core v5.0.3+ (xhttp itself is already gated there).
+        if l4_cdn; then
+          xh_cdn=y
+          echo "  ${D}Through a CDN, xhttp uses the two-connection CDN-compatible mode automatically (xhttp_cdn).${N}"
+        elif [[ "$listens" == "1" ]]; then
+          echo "  ${D}CDN-compatible mode — turn ON if the OTHER server reaches this one through a CDN${N}"
+          echo "  ${D}(Cloudflare, ArvanCloud…). It MUST match the other server's choice.${N}"
+          wyn 'xhttp CDN-compatible mode (the other side is behind a CDN)? (y/N)' "${xh_cdn:-n}"; (( WIZ_BACK )) && continue; xh_cdn="$WIZ_VAL"
+        else
+          echo "  ${D}CDN-compatible mode — a long GET download + short POST uploads instead of one endless${N}"
+          echo "  ${D}POST. Only needed through a CDN; leave off for a direct xhttp tunnel. Match both servers.${N}"
+          wyn 'xhttp CDN-compatible mode? (y/N)' "${xh_cdn:-n}"; (( WIZ_BACK )) && continue; xh_cdn="$WIZ_VAL"
+        fi
+      else
+        echo "  ${D}WebSocket: each carrier opens with  GET <path>  + Upgrade: websocket.${N}"
+        echo "  ${D}Set the SAME path on both servers. Anything else gets a plain 404.${N}"
+        wask 'WebSocket path' "${ws_path:-/ws}"; (( WIZ_BACK )) && { step=pool; continue; }; ws_path="$WIZ_VAL"
+        [[ "$ws_path" == /* ]] || ws_path="/${ws_path}"
+      fi
+      step=tlsopt ;;
+    tlsopt)
+      # The SNI and the fingerprint are read only by the side that dials: the listening side
+      # answers with its own certificate. Through a CDN the SNI is the domain, so only the
+      # fingerprint is left to ask.
+      if ! l4_tlsopt; then
+        [[ "$listens" == "1" ]] && echo "  ${D}The SNI, the Host, a CDN and sni_spoof are set on the other server (the side that dials).${N}"
+        step=spoofopt; continue
+      fi
+      if ! l4_cdn; then
+        echo "  ${D}SNI = the site name inside the REAL connection. The other server ignores it, so any${N}"
+        echo "  ${D}name works - just press Enter.$(l4_spoof && echo " (The fake name for sni_spoof is asked next.)")${N}"
+        wask 'SNI of the real connection' "${tls_sni:-www.cloudflare.com}"; (( WIZ_BACK )) && { l4_http && step=ws || step=pool; continue; }; tls_sni="$WIZ_VAL"
+      fi
+      echo "  uTLS fingerprint (the browser this server's TLS hello copies):"
+      echo "   ${W}1${N}) chrome ${G}(recommended)${N}   ${W}2${N}) firefox   ${W}3${N}) safari   ${W}4${N}) edge   ${W}5${N}) ios"
+      wask 'select' "${_r_fp:-1}"; (( WIZ_BACK )) && { l4_cdn && step=ws; continue; }; _r_fp="$WIZ_VAL"
+      case "$_r_fp" in 2) tls_fp=firefox;; 3) tls_fp=safari;; 4) tls_fp=edge;; 5) tls_fp=ios;; *) tls_fp=chrome;; esac
+      step=spoofopt ;;
+    spoofopt)
+      # sni_spoof: the Iran edge (the dialing side of a direct tunnel) sends one forged opening
+      # carrying an ALLOWED domain before each carrier's real handshake.
+      l4_spoof || { step=algo; continue; }
+      echo "  ${B}sni_spoof - the FAKE name${N}"
+      echo "  ${D}Before each connection this server first sends a fake packet with an ALLOWED site name.${N}"
+      echo "  ${D}The filter reads that name and lets the connection through; your server throws the${N}"
+      echo "  ${D}fake packet away, and the real connection then follows as usual.${N}"
+      echo "  ${D}Give sites that stay OPEN during a shutdown$(l4_cdn && echo " and are on the SAME CDN as your domain").${N}"
+      echo "  ${D}Several: comma separated - each connection takes the next one.${N}"
+      if [[ -n "$spoof_names" ]]; then wask 'fake allowed site name(s)' "$spoof_names"; else wask_req 'fake allowed site name(s)'; fi
+      (( WIZ_BACK )) && { l4_tlsopt && step=tlsopt || step=ws; continue; }; spoof_names="$WIZ_VAL"
+      echo "  ${D}TTL of the fake packet. 0 = normal (recommended). 6-12 = it dies on the way, before${N}"
+      echo "  ${D}reaching your server (only if the filter sits close to this server).${N}"
+      wask 'fake packet TTL' "${spoof_ttl:-0}"; (( WIZ_BACK )) && { continue; }; spoof_ttl="$WIZ_VAL"; [[ "$spoof_ttl" =~ ^[0-9]+$ && "$spoof_ttl" -ge 0 && "$spoof_ttl" -le 255 ]] || spoof_ttl=0
+      echo "  ${D}If sending the fake packet fails: n = connect without it (recommended), y = drop that connection.${N}"
+      wyn 'strict: drop a connection whose fake packet failed? (y/N)' "${spoof_strict:-n}"; (( WIZ_BACK )) && { continue; }; spoof_strict="$WIZ_VAL"
+      step=algo ;;
     algo)
-      wask 'encryption (aes-256-gcm | chacha20-poly1305)' "${algo:-aes-256-gcm}"; (( WIZ_BACK )) && { step=header; continue; }; algo="$WIZ_VAL"
-      case "$algo" in aes-256-gcm|chacha20-poly1305) ;; *) algo="aes-256-gcm";; esac
+      # tls / wss / xhttps: the TLS already protects the wire, so the default is none (the PSK
+      # still authenticates the carriers and the license). tcpfwd / ws / xhttp: aes-256-gcm.
+      local algo_def="aes-256-gcm"
+      if [[ "$transport" == "tls" || "$transport" == "wss" || "$transport" == "xhttps" ]]; then
+        algo_def="none"
+        echo "  ${D}none = no second encryption on the data (the TLS already covers it). The PSK${N}"
+        echo "  ${D}still authenticates the carriers and the license. Set the SAME on both servers.${N}"
+      else
+        echo "  ${D}none = the user data crosses the wire unencrypted (the PSK still authenticates${N}"
+        echo "  ${D}the carriers and the license). Set the SAME on both servers.${N}"
+      fi
+      wask 'encryption (aes-256-gcm | chacha20-poly1305 | none)' "${algo:-$algo_def}"
+      if (( WIZ_BACK )); then
+        if l4_spoof; then step=spoofopt
+        elif l4_tlsopt; then step=tlsopt
+        elif l4_http; then step=ws
+        elif [[ "$transport" == "tcpfwd" ]]; then step=header
+        else step=pool; fi
+        continue
+      fi
+      algo="$WIZ_VAL"
+      case "$algo" in aes-256-gcm|chacha20-poly1305|none) ;; *) algo="$algo_def";; esac
+      if [[ "$algo" == "none" ]] && ! core_at_least v4.2.3; then
+        err "encryption none needs core v4.2.3 or newer - update the core first"; algo=""; continue
+      fi
       step=health ;;
     health)
       [[ "$side" == "1" ]] && sidename="iran" || sidename="kharej"
@@ -753,23 +873,46 @@ ${fspecs}]
     echo "[transport]"
     echo "type = \"${transport}\""
     echo "mode = \"${role}\""
+    # Through a CDN the edge dials the clean edge IP (or the domain, resolved here) and sends
+    # the domain as the SNI and the Host; otherwise the Host is left to the core (= the SNI).
     if [[ "$listens" == "1" ]]; then echo "listen = \"0.0.0.0:${port}\""
+    elif l4_cdn; then echo "remote = \"${edge_ip:-$cdn_domain}:${port}\""
     else echo "remote = \"${peer}:${port}\""; fi
     echo "pool_connection = ${pool}"
     [[ -n "$l4hdr" ]] && echo "l4_header = \"${l4hdr}\""
-    if [[ "$l4_tls" == "1" ]]; then
-      echo "l4_tls = true"
-      echo "sni = \"${tls_sni:-www.cloudflare.com}\""
+    if l4_tlsopt; then
+      if l4_cdn; then echo "sni = \"${cdn_domain}\""; else echo "sni = \"${tls_sni:-www.cloudflare.com}\""; fi
       echo "tls_fingerprint = \"${tls_fp:-chrome}\""
     fi
+    if [[ "$transport" == "ws" || "$transport" == "wss" ]]; then
+      echo "ws_path = \"${ws_path:-/ws}\""
+      l4_cdn && echo "ws_host = \"${cdn_domain}\""
+    fi
+    if l4_xhttp; then
+      echo "xhttp_path = \"${xh_path:-/xhttp}\""
+      l4_cdn && echo "xhttp_host = \"${cdn_domain}\""
+      [[ "$xh_cdn" == "y" ]] && echo "xhttp_cdn = true"
+    fi
     [[ "$ldir" == "direct" ]] && echo "l4_direction = \"direct\""
+    if l4_spoof; then
+      echo "sni_spoof = true"
+      echo "sni_spoof_names = \"${spoof_names}\""
+      [[ "${spoof_ttl:-0}" != "0" ]] && echo "sni_spoof_ttl = ${spoof_ttl}"
+      [[ "$spoof_strict" == "y" ]] && echo "sni_spoof_strict = true"
+    fi
     echo ""
     echo "[tun]"
     echo "health_port = ${health}"
     echo ""
     echo "[security]"
-    echo "enable_encryption = true"
-    echo "algorithm = \"${algo}\""
+    if [[ "$algo" == "none" ]]; then
+      echo "# encryption none: the user data is not sealed again; the PSK below still"
+      echo "# authenticates the carriers and the license."
+      echo "enable_encryption = false"
+    else
+      echo "enable_encryption = true"
+      echo "algorithm = \"${algo}\""
+    fi
     echo "psk = \"${psk}\""
     echo ""
     if [[ -n "$lic_block" ]]; then printf '%s\n' "$lic_block"; fi
@@ -893,7 +1036,11 @@ status_all(){
       active)
         printf '  %s%-14s%s %s● running%s   %s\n' "$W" "$id" "$N" "$G" "$N" "${D}${transport}${N}"
         if [[ -z "$js" ]]; then
-          printf '      %-12s %s\n' "connection" "${Y}starting…${N}"
+          # Core v5.0.1+: a failed license / core check holds the next start (it never stops
+          # for good); the reason is the last ⛔ line since the last full start.
+          why="$(stop_reason "$svc")"
+          if [[ -n "$why" ]]; then printf '      %-12s %s\n' "connection" "${Y}waiting to check again${N} — ${why}"
+          else printf '      %-12s %s\n' "connection" "${Y}starting…${N}"; fi
         elif [[ "$alive" == "true" ]]; then
           printf '      %-12s %s\n' "connection" "${G}connected${N} · ${peers} carrier$([[ "$peers" == 1 ]] || echo s)"
         else
@@ -923,14 +1070,9 @@ status_all(){
   pause
 }
 
-update_core(){
-  banner
-  warn "This bundle is pinned to the reviewed offline v4.2.1 core."
-  warn "To upgrade, install a newly reviewed bundle on BOTH peers."
-  pause
-}
+update_core(){ banner; warn "Pinned offline v5.0.4 core. Upgrade with a newly reviewed bundle on BOTH peers."; pause; }
 
-update_script(){ banner; warn "Use install.sh from the next reviewed offline bundle."; pause; }
+update_script(){ banner; warn "Use install.sh from a newly reviewed offline bundle."; pause; }
 AU_UNIT="pengu-core-autoupdate"
 AU_SCRIPT="${INSTALL_DIR}/autoupdate.sh"
 AU_LOG="${INSTALL_DIR}/autoupdate.log"
@@ -995,7 +1137,7 @@ au_disable(){
         "${SERVICE_DIR}/${KP_UNIT}.timer" "${SERVICE_DIR}/${KP_UNIT}.service" "$KP_SCRIPT"
   systemctl daemon-reload
 }
-auto_update_menu(){ banner; warn "Automatic vendor updates are disabled. Upgrade with a reviewed offline bundle on both peers."; pause; }
+auto_update_menu(){ banner; warn "Upgrade with a newly reviewed offline bundle on both peers."; pause; }
 
 remove_core(){ banner; if [[ "$(ask_yn 'remove ALL tunnels + core? (y/n)' 'n')" == "y" ]]; then au_disable; for id in $(list_ids); do systemctl disable --now "$(svc_of "$id")" 2>/dev/null; rm_icmp_rule "$id"; find "${SERVICE_DIR}" -maxdepth 1 -name "pengutunnel-${id}.service" -delete; done; systemctl daemon-reload; find "$INSTALL_DIR" -mindepth 1 -delete 2>/dev/null; ok "removed /root/pengutunnel"; fi; pause; }
 
@@ -1288,7 +1430,7 @@ need_root
 printf "${D}loading…${N}\r"
 load_sysinfo
 if au_enabled || systemctl is-active --quiet "${AU_UNIT}.timer" || systemctl is-active --quiet "${AU_UNIT}.service"; then
-  warn "Disabling the previous Pengu core updater to keep this reviewed binary installed."
+  warn "Disabling the previous core updater to keep the reviewed offline binary installed."
   systemctl disable --now "${AU_UNIT}.timer" >/dev/null 2>&1 || exit 1
   systemctl stop "${AU_UNIT}.service" >/dev/null 2>&1 || exit 1
 fi
